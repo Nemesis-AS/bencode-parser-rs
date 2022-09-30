@@ -42,3 +42,7 @@ Example: d3:cow3:moo4:spam4:eggse represents the dictionary { "cow" =&gt; "moo",
 Example: d4:spaml1:a1:bee represents the dictionary { "spam" =&gt; [ "a", "b" ] }
 Example: d9:publisher3:bob17:publisher-webpage15:www.example.com18:publisher.location4:homee represents { "publisher" =&gt; "bob", "publisher-webpage" =&gt; "www.example.com", "publisher.location" =&gt; "home" }
 Example: de represents an empty dictionary {}
+
+
+
+Test String: lli45ee10:HelloWorldi78el4:spam4:eggselee

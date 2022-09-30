@@ -1,15 +1,16 @@
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::{fmt, fs};
 
 // const FILE_PATH: &str = "D:/Learn/Rust/torrent_parser/src/Indie.Game.The.Movie.2012.1080p.BluRay.x265-RARBG-[rarbg.to].torrent";
 const FILE_PATH: &str = "D:/Learn/Rust/torrent_parser/src/Hello.txt";
 
-#[derive(Clone)]
 enum BEncode {
     Int(isize),
     String(String),
     List(Vec<BEncode>),
+    Dictionary(HashMap<String, BEncode>),
 }
 
 impl fmt::Debug for BEncode {
@@ -18,6 +19,7 @@ impl fmt::Debug for BEncode {
             Self::Int(value) => value.to_string(),
             Self::String(value) => value.clone(),
             Self::List(value) => format!("{:?}", value),
+            Self::Dictionary(value) => format!("{:?}", value),
             // _ => String::from(""),
         };
 
@@ -26,7 +28,7 @@ impl fmt::Debug for BEncode {
 }
 
 impl BEncode {
-    fn push(&mut self, item: BEncode) {
+    fn push(&mut self, item: BEncode, key: Option<String>) {
         match self {
             Self::Int(_) => {
                 println!("Cannot insert BEncode Object inside Integer!")
@@ -37,6 +39,13 @@ impl BEncode {
             Self::List(value) => {
                 value.push(item);
             }
+            Self::Dictionary(value) => {
+                if key.is_none() {
+                    println!("No key provided!");
+                    return;
+                }
+                value.insert(key.unwrap(), item);
+            }
         }
     }
 }
@@ -45,8 +54,11 @@ fn main() {
     let path: PathBuf = PathBuf::from(FILE_PATH);
     let bytes = fs::read(path).expect("Couldn't Read File!");
 
+    // STATE VARIABLES
+
     // Parents
     let mut parents: Vec<BEncode> = Vec::new();
+    let mut dict_key: String = String::new();
 
     let mut idx: usize = 0;
     let len: usize = bytes.len();
@@ -62,19 +74,49 @@ fn main() {
                 println!("Parsed Integer: {:?}", num);
                 if !parents.is_empty() {
                     let mut parent: BEncode = parents.pop().unwrap();
-                    parent.push(num);
-                    parents.push(parent);
+
+                    match parent {
+                        BEncode::List(_) => {
+                            parent.push(num, None);
+                            parents.push(parent);
+                        }
+                        BEncode::Dictionary(_) => {
+                            if dict_key.is_empty() {
+                                println!("[BEncode Error] Cannot use Int as key for Dictionary!");
+                            } else {
+                                parent.push(num, Some(dict_key));
+                                dict_key = String::new();
+                            }
+                            parents.push(parent);
+                        }
+                        _ => (),
+                    }
                 }
             }
             // String
             c if c.chars().next().unwrap().is_numeric() => {
                 let (new_idx, out_str) = parse_str(&bytes, idx - 1);
                 idx = new_idx;
-                println!("Parsed String: {:?}", out_str);
+                // println!("Parsed String: {:?}", out_str);
                 if !parents.is_empty() {
                     let mut parent: BEncode = parents.pop().unwrap();
-                    parent.push(out_str);
-                    parents.push(parent);
+
+                    match parent {
+                        BEncode::List(_) => {
+                            parent.push(out_str, None);
+                            parents.push(parent);
+                        }
+                        BEncode::Dictionary(_) => {
+                            if dict_key.is_empty() {
+                                dict_key = format!("{:?}", out_str);
+                            } else {
+                                parent.push(out_str, Some(dict_key));
+                                dict_key = String::new();
+                            }
+                            parents.push(parent);
+                        }
+                        _ => (),
+                    }
                 }
             }
             // List
@@ -82,16 +124,33 @@ fn main() {
                 parents.push(BEncode::List(Vec::new()));
             }
             // Dictionary
-            "d" => println!("Dict"),
+            "d" => {
+                parents.push(BEncode::Dictionary(HashMap::new()));
+            }
             "e" => {
                 match parents.len().cmp(&1) {
                     Ordering::Greater => {
                         let parent: BEncode = parents.pop().unwrap();
-                        println!("Parsed BEncode Object: {:?}", parent);
+                        // println!("Parsed BEncode Object: {:?}", parent);
 
                         let mut root: BEncode = parents.pop().unwrap();
-                        root.push(parent);
-                        parents.push(root);
+
+                        match root {
+                            BEncode::List(_) => {
+                                root.push(parent, None);
+                                parents.push(root);
+                            }
+                            BEncode::Dictionary(_) => {
+                                if dict_key.is_empty() {
+                                    println!("[BEncode Error] Cannot use Non-String BEncode Object as Dictionary Key!");
+                                } else {
+                                    root.push(parent, Some(dict_key));
+                                    dict_key = String::new();
+                                }
+                                parents.push(root);
+                            }
+                            _ => (),
+                        }
                     }
                     Ordering::Equal => {
                         let root: BEncode = parents.pop().unwrap();
