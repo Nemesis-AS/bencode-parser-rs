@@ -8,6 +8,7 @@ pub enum BEncode {
     String(String),
     List(Vec<BEncode>),
     Dictionary(HashMap<String, BEncode>),
+    BinaryStr(Vec<u8>),
 }
 
 impl fmt::Debug for BEncode {
@@ -17,6 +18,7 @@ impl fmt::Debug for BEncode {
             Self::String(value) => value.clone(),
             Self::List(value) => format!("{:?}", value),
             Self::Dictionary(value) => format!("{:?}", value),
+            Self::BinaryStr(_) => "[Binary String]".to_string(),
             // _ => String::from(""),
         };
 
@@ -152,6 +154,9 @@ impl BEncode {
             Self::String(_) => {
                 println!("Cannot insert BEncode Object inside String!")
             }
+            Self::BinaryStr(_) => {
+                println!("Cannot insert BEncode Object inside String (Yet)!")
+            }
             Self::List(value) => {
                 value.push(item);
             }
@@ -216,10 +221,11 @@ impl BEncode {
         let out_str = String::from_utf8(byte_slice.clone()).unwrap_or_else(|_e| "".to_string());
 
         if out_str.is_empty() {
-            unsafe {
-                let bin = String::from_utf8_unchecked(byte_slice);
-                return (idx + len, BEncode::String(bin));
-            }
+            // unsafe {
+            //     // let bin = String::from_utf8_unchecked(byte_slice);
+            //     return (idx + len, BEncode::BinaryStr(byte_slice.to_vec()));
+            // }
+            return (idx + len, BEncode::BinaryStr(byte_slice.to_vec()));
         }
 
         (idx + len, BEncode::String(out_str))
