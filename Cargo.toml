@@ -1,5 +1,5 @@
 [package]
-name = "torrent_parser"
+name = "bencode_parser"
 version = "0.1.0"
 edition = "2021"
 
