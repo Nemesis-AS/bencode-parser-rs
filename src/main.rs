@@ -1,18 +1,36 @@
 mod bencode;
 
 use bencode::BEncode;
+use clap::Parser;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 
-const FILE_PATH: &str = "./src/Hello.txt";
-const OUT_FILE: &str = "./src/out_file.txt";
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Path to the input file
+    #[arg(short, long, default_value_t = String::from("./src/Hello.txt"))]
+    input: String,
+
+    /// Path to the output file
+    #[arg(short, long, default_value_t = String::from("./target/bencode_out_file.txt"))]
+    output: String,
+}
 
 fn main() {
-    let res: BEncode = BEncode::parse(FILE_PATH);
+    let args: Args = Args::parse();
+
+    let path: PathBuf = PathBuf::from(args.input.clone());
+    if !path.exists() {
+        println!("THe input file path does not exits!");
+        return;
+    }
+
+    let res: BEncode = BEncode::parse(&args.input);
 
     if let BEncode::Dictionary(_) = res {
-        let file_path: PathBuf = PathBuf::from(OUT_FILE);
+        let file_path: PathBuf = PathBuf::from(args.output);
         let mut out_file =
             fs::File::create(file_path).expect("An Error Occured while creating file");
         out_file
