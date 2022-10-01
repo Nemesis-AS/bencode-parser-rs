@@ -1,11 +1,11 @@
 # Torrent Parser
 
-## Working
+## To Do
 
-Read to torrent file as bytes, one byte at a time - 
-
-1. Match the character with data types. If a match is found, then create the object and push the data inside it.
-2. If the match fails, panic! or return None 
+- [x] Fix `dict_key` being overwritten for nested dictionaries
+- [ ] Add support for binary data for `packets` key
+- [ ] Organize code into separate files
+- [ ] Add command-line parser with arguments?
 
 ## Bencoding
 Bencoding is a way to specify and organize data in a terse format. It supports the following types: byte strings, integers, lists, and dictionaries.
@@ -45,4 +45,4 @@ Example: de represents an empty dictionary {}
 
 
 
-Test String: lli45ee10:HelloWorldi78el4:spam4:eggselee
+Test String: lli45ee10:HelloWorldi78el4:spam4:eggseled3:cow3:moo4:spam4:eggsee

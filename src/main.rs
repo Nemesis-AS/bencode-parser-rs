@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::{fmt, fs};
 
-// const FILE_PATH: &str = "D:/Learn/Rust/torrent_parser/src/Indie.Game.The.Movie.2012.1080p.BluRay.x265-RARBG-[rarbg.to].torrent";
 const FILE_PATH: &str = "D:/Learn/Rust/torrent_parser/src/Hello.txt";
 
 enum BEncode {
@@ -58,7 +57,7 @@ fn main() {
 
     // Parents
     let mut parents: Vec<BEncode> = Vec::new();
-    let mut dict_key: String = String::new();
+    let mut dict_keys: Vec<String> = Vec::new();
 
     let mut idx: usize = 0;
     let len: usize = bytes.len();
@@ -81,11 +80,11 @@ fn main() {
                             parents.push(parent);
                         }
                         BEncode::Dictionary(_) => {
-                            if dict_key.is_empty() {
+                            if dict_keys.is_empty() {
                                 println!("[BEncode Error] Cannot use Int as key for Dictionary!");
                             } else {
-                                parent.push(num, Some(dict_key));
-                                dict_key = String::new();
+                                parent.push(num, Some(dict_keys.pop().unwrap()));
+                                // dict_key = String::new();
                             }
                             parents.push(parent);
                         }
@@ -107,11 +106,11 @@ fn main() {
                             parents.push(parent);
                         }
                         BEncode::Dictionary(_) => {
-                            if dict_key.is_empty() {
-                                dict_key = format!("{:?}", out_str);
+                            if dict_keys.len() <= parents.len() {
+                                dict_keys.push(format!("{:?}", out_str));
                             } else {
-                                parent.push(out_str, Some(dict_key));
-                                dict_key = String::new();
+                                parent.push(out_str, Some(dict_keys.pop().unwrap()));
+                                // dict_key = String::new();
                             }
                             parents.push(parent);
                         }
@@ -141,11 +140,11 @@ fn main() {
                                 parents.push(root);
                             }
                             BEncode::Dictionary(_) => {
-                                if dict_key.is_empty() {
+                                if dict_keys.is_empty() {
                                     println!("[BEncode Error] Cannot use Non-String BEncode Object as Dictionary Key!");
                                 } else {
-                                    root.push(parent, Some(dict_key));
-                                    dict_key = String::new();
+                                    root.push(parent, Some(dict_keys.pop().unwrap()));
+                                    // dict_key = String::new();
                                 }
                                 parents.push(root);
                             }
