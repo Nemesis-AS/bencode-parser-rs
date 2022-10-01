@@ -3,8 +3,7 @@
 ## To Do
 
 - [x] Fix `dict_key` being overwritten for nested dictionaries
-- [ ] Add support for binary data for `packets` key
-- [ ] Organize code into separate files
+- [x] Organize code into separate files
 - [ ] Add command-line parser with arguments?
 
 ## Bencoding
