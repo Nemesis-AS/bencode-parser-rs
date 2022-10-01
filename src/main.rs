@@ -1,9 +1,11 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
+use std::io::Write;
 use std::path::PathBuf;
 use std::{fmt, fs};
 
 const FILE_PATH: &str = "D:/Learn/Rust/torrent_parser/src/Hello.txt";
+const OUT_FILE: &str = "D:/Learn/Rust/torrent_parser/src/out_file.txt";
 
 enum BEncode {
     Int(isize),
@@ -50,6 +52,19 @@ impl BEncode {
 }
 
 fn main() {
+    let res: BEncode = parse();
+
+    if let BEncode::Dictionary(_) = res {
+        let file_path: PathBuf = PathBuf::from(OUT_FILE);
+        let mut out_file =
+            fs::File::create(file_path).expect("An Error Occured while creating file");
+        out_file
+            .write_all(format!("{:?}", res).as_bytes())
+            .expect("An Error Occured while writing data to the output file!");
+    }
+}
+
+fn parse() -> BEncode {
     let path: PathBuf = PathBuf::from(FILE_PATH);
     let bytes = fs::read(path).expect("Couldn't Read File!");
 
@@ -70,7 +85,7 @@ fn main() {
             "i" => {
                 let (new_idx, num) = parse_int(&bytes, idx - 1);
                 idx = new_idx;
-                println!("Parsed Integer: {:?}", num);
+                // println!("Parsed Integer: {:?}", num);
                 if !parents.is_empty() {
                     let mut parent: BEncode = parents.pop().unwrap();
 
@@ -153,8 +168,8 @@ fn main() {
                     }
                     Ordering::Equal => {
                         let root: BEncode = parents.pop().unwrap();
-                        // return root;
-                        println!("Root Object: {:?}", root);
+                        return root;
+                        // println!("Root Object: {:?}", root);
                     }
                     _ => (),
                 }
@@ -162,6 +177,8 @@ fn main() {
             _ => println!("Nothing"),
         }
     }
+
+    BEncode::Int(-1)
 }
 
 fn parse_int(bytes: &[u8], mut idx: usize) -> (usize, BEncode) {
@@ -211,7 +228,15 @@ fn parse_str(bytes: &[u8], mut idx: usize) -> (usize, BEncode) {
         .parse::<usize>()
         .unwrap_or_else(|_err| panic!("Invalid String Length found at column {}", idx));
 
-    let out_str = String::from_utf8(bytes[idx..idx + len].to_vec()).unwrap();
+    let byte_slice: Vec<u8> = bytes[idx..idx + len].to_vec();
+    let out_str = String::from_utf8(byte_slice.clone()).unwrap_or_else(|_e| "".to_string());
+
+    if out_str.is_empty() {
+        unsafe {
+            let bin = String::from_utf8_unchecked(byte_slice);
+            return (idx + len, BEncode::String(bin));
+        }
+    }
 
     (idx + len, BEncode::String(out_str))
 }
