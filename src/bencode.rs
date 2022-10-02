@@ -2,15 +2,16 @@
 //!
 //! ## Example
 //! ```rust
-//! let res: BEncode = BEncode::parse("./src/Hello.txt");
+//! let path: PathBuf = PathBuf::from("./src/Hello.txt");
+//! let bytes = fs::read(path).expect("Couldn't Read File!");
+//! let res: BEncode = BEncode::parse(bytes);
 //! println!("Decoded Object: {:?}", res);
 //!
 //! ```
 
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use std::path::PathBuf;
-use std::{fmt, fs};
+use std::fmt;
 
 /// The BEncode Object.
 /// This enum wraps the data types supported by bencode objects, with an addition of `String`.
@@ -46,10 +47,7 @@ impl fmt::Debug for BEncode {
 impl BEncode {
     /// This function returns the parsed [`BEncode`] object, given a valid path to a file containing bencode.
     /// returns a `Bencode::Int(-1)` if the bencode cannot be parsed
-    pub fn parse(file_path: &str) -> Self {
-        let path: PathBuf = PathBuf::from(file_path);
-        let bytes = fs::read(path).expect("Couldn't Read File!");
-
+    pub fn parse(bytes: Vec<u8>) -> Self {
         // =====================STATE VARIABLES==========================
         let mut parents: Vec<BEncode> = Vec::new();
         let mut dict_keys: Vec<String> = Vec::new();
