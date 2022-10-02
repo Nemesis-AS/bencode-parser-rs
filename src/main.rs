@@ -27,7 +27,10 @@ fn main() {
         return;
     }
 
-    let res: BEncode = BEncode::parse(&args.input);
+    let path: PathBuf = PathBuf::from(&args.input);
+    let bytes = fs::read(path).expect("Couldn't Read File!");
+
+    let res: BEncode = BEncode::parse(bytes);
 
     if let BEncode::Dictionary(_) = res {
         let file_path: PathBuf = PathBuf::from(args.output);

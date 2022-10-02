@@ -1,13 +1,31 @@
+//! > **A Bencode Parser written in Rust**
+//!
+//! ## Example
+//! ```rust
+//! let path: PathBuf = PathBuf::from("./src/Hello.txt");
+//! let bytes = fs::read(path).expect("Couldn't Read File!");
+//! let res: BEncode = BEncode::parse(bytes);
+//! println!("Decoded Object: {:?}", res);
+//!
+//! ```
+
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use std::path::PathBuf;
-use std::{fmt, fs};
+use std::fmt;
 
+/// The BEncode Object.
+/// This enum wraps the data types supported by bencode objects, with an addition of `String`.
+/// The `String` variant holds the `BinaryStr` which are valid UTF-8 strings.
 pub enum BEncode {
+    /// The `Int` variant holds the integers parsed from bencode
     Int(isize),
+    /// The `String` variant holds parsed bencode ByteStrings that have valid UTF-8 characters
     String(String),
+    /// The `List` variant holds parsed bencode Lists. They can hold any of the bencode types as children
     List(Vec<BEncode>),
+    /// The `Dictionary` variant holds parsed bencode Dictionaries. They are similar to `Hashmap`, but the keys can only be [`BEncode::String`]. Though the value can be of any of the bencode types
     Dictionary(HashMap<String, BEncode>),
+    /// The `BinaryStr` variant holds parsed bencode ByteStrings that do not have valid UTF-8 characters. They are useful for dealing with the `pieces` property of a torrent file as they contain binary strings.
     BinaryStr(Vec<u8>),
 }
 
@@ -27,15 +45,13 @@ impl fmt::Debug for BEncode {
 }
 
 impl BEncode {
-    pub fn parse(file_path: &str) -> Self {
-        let path: PathBuf = PathBuf::from(file_path);
-        let bytes = fs::read(path).expect("Couldn't Read File!");
-
-        // STATE VARIABLES
-
-        // Parents
+    /// This function returns the parsed [`BEncode`] object, given a valid path to a file containing bencode.
+    /// returns a `Bencode::Int(-1)` if the bencode cannot be parsed
+    pub fn parse(bytes: Vec<u8>) -> Self {
+        // =====================STATE VARIABLES==========================
         let mut parents: Vec<BEncode> = Vec::new();
         let mut dict_keys: Vec<String> = Vec::new();
+        // ==============================================================
 
         let mut idx: usize = 0;
         let len: usize = bytes.len();
@@ -146,6 +162,9 @@ impl BEncode {
         BEncode::Int(-1)
     }
 
+    /// This function is used to push items inside bencode Lists[`BEncode::List`] and Dictionaries[`BEncode::Dictionary`]
+    /// The addition happens in place so it does not return anything
+    /// This will not work for [`BEncode::Int`], [`BEncode::String`] or [`BEncode::BinaryStr`]
     fn push(&mut self, item: BEncode, key: Option<String>) {
         match self {
             Self::Int(_) => {
@@ -170,6 +189,7 @@ impl BEncode {
         }
     }
 
+    /// Internal function to parse a bencode Integer
     fn parse_int(bytes: &[u8], mut idx: usize) -> (usize, BEncode) {
         let mut num_str: String = String::new();
 
@@ -197,6 +217,7 @@ impl BEncode {
         }
     }
 
+    /// Internal function to parse a bencode ByteString
     fn parse_str(bytes: &[u8], mut idx: usize) -> (usize, BEncode) {
         let mut len_str: String = String::new();
 
