@@ -1,4 +1,5 @@
 [package]
+authors = ["Akshat Shukla"]
 description = "A bencode parser written in Rust with no dependencies"
 edition = "2021"
 exclude = ["*.torrent", "*.txt"]
