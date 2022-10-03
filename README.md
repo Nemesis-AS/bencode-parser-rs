@@ -6,10 +6,11 @@ A bencode parser written in Rust
 
 ## Getting Started
 
-To get started, clone the repository to your machine. Open the terminal in the root directory of the project and run
-```shell
-cargo b
-.\\target\\debug\\torrent_parser.exe -i <PATH-TO-INPUT-FILE> -o <PATH-TO-OUTPUT-FILE>
+```rust
+let path: PathBuf = PathBuf::from("./src/Hello.txt");
+let bytes = fs::read(path).expect("Couldn't Read File!");
+let res: BEncode = BEncode::parse(bytes);
+println!("Decoded Object: {:?}", res);
 ```
 
 ## What is `[Binary String]`?

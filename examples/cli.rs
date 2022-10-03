@@ -1,6 +1,4 @@
-mod bencode;
-
-use bencode::BEncode;
+use bencode_parser::BEncode;
 use clap::Parser;
 use std::fs;
 use std::io::Write;

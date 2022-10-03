@@ -1,9 +1,19 @@
 [package]
-name = "bencode_parser"
-version = "0.1.0"
+authors = ["Akshat Shukla"]
+description = "A bencode parser written in Rust with no dependencies"
 edition = "2021"
-
+exclude = ["*.torrent", "*.txt"]
+include = ["src/**/*", "LICENSE", "README.md"]
+keywords = ["bencode", "torrent"]
+license = "MIT"
+name = "bencode_parser"
+readme = "README.md"
+repository = "https://github.com/Nemesis-AS/bencode-parser-rs"
+version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# No Dependencies!
+
+[dev-dependencies]
 clap = { version = "4.0.7", features = ["derive"] }
