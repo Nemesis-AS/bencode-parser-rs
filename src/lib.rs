@@ -2,7 +2,7 @@
 //!
 //! ## Example
 //! ```rust
-//! let path: PathBuf = PathBuf::from("./src/Hello.txt");
+//! let path: PathBuf = PathBuf::from("./src/big-buck-bunny.torrent");
 //! let bytes = fs::read(path).expect("Couldn't Read File!");
 //! let res: BEncode = BEncode::parse(bytes);
 //! println!("Decoded Object: {:?}", res);
