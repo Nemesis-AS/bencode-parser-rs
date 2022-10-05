@@ -1,5 +1,3 @@
-> :warning:This project is still a WIP :warning:
-
 # Bencode Parser
 
 A bencode parser written in Rust
@@ -7,7 +5,7 @@ A bencode parser written in Rust
 ## Getting Started
 
 ```rust
-let path: PathBuf = PathBuf::from("./src/big-buck-bunny.torrent");
+let path: PathBuf = PathBuf::from("./examples/big-buck-bunny.torrent");
 let bytes = fs::read(path).expect("Couldn't Read File!");
 let res: BEncode = BEncode::parse(bytes);
 println!("Decoded Object: {:?}", res);

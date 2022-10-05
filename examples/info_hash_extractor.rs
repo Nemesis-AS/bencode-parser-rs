@@ -7,7 +7,7 @@ use std::path::PathBuf;
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Path to the input file
-    #[arg(short, long, default_value_t = String::from("./src/big-buck-bunny.torrent"))]
+    #[arg(short, long, default_value_t = String::from("./examples/big-buck-bunny.torrent"))]
     input: String,
 }
 
