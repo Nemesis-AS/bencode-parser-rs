@@ -1,4 +1,4 @@
-use bencode_parser::BEncode;
+use bencode_parser::{BEncode, Options};
 use clap::Parser;
 use std::fs;
 use std::io::Write;
@@ -28,7 +28,8 @@ fn main() {
     let path: PathBuf = PathBuf::from(&args.input);
     let bytes = fs::read(path).expect("Couldn't Read File!");
 
-    let res: BEncode = BEncode::parse(bytes);
+    let options: Options = Options::default();
+    let res: BEncode = BEncode::parse(bytes, options);
 
     if let BEncode::Dictionary(_) = res {
         let file_path: PathBuf = PathBuf::from(args.output);
