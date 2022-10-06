@@ -5,11 +5,12 @@ A bencode parser written in Rust
 ## Getting Started
 
 ```rust
-use bencode::BEncode;
+use bencode::{BEncode, Options};
 
 let path: PathBuf = PathBuf::from("./examples/big-buck-bunny.torrent");
 let bytes = fs::read(path).expect("Couldn't Read File!");
-let res: BEncode = BEncode::parse(bytes);
+let options: Options = Options::default();
+let res: BEncode = BEncode::parse(bytes, options);
 println!("Decoded Object: {:?}", res);
 ```
 
