@@ -1,4 +1,4 @@
-use bencode_parser::BEncode;
+use bencode_parser::{BEncode, Options};
 use clap::Parser;
 use std::fs;
 use std::path::PathBuf;
@@ -16,7 +16,12 @@ fn main() {
 
     let path: PathBuf = PathBuf::from(args.input);
     let bytes: Vec<u8> = fs::read(path).expect("Cannot read File!");
-    let res: BEncode = BEncode::parse(bytes);
+
+    let options: Options = Options::default();
+    let res: BEncode = BEncode::parse(bytes, options);
+
+    // The length is 20 in torrent files, but parsing 1 byte to hex returns 2 characters, so the length also has to be doubled
+    let hash_length: usize = 40;
 
     if let BEncode::Dictionary(obj) = res {
         let info: &BEncode = obj
@@ -25,17 +30,20 @@ fn main() {
 
         if let BEncode::Dictionary(info_obj) = info {
             let pieces: &BEncode = info_obj.get("pieces").expect("Cannot find Pieces!");
-            if let BEncode::BinaryStr(str) = pieces {
-                if str.len() % 20 != 0 {
-                    panic!("Pieces Hash not valid! (The length is not a multiple of 20)");
+            if let BEncode::String(str) = pieces {
+                if str.len() % hash_length != 0 {
+                    panic!(
+                        "Pieces Hash not valid! (The length is not a multiple of {})",
+                        hash_length
+                    );
                 }
                 let mut hashes: Vec<String> = Vec::new();
                 let mut start_idx: usize = 0;
 
-                while (start_idx + 20) <= str.len() {
-                    let hash: String = hex::encode(&str[start_idx..start_idx + 20]);
+                while (start_idx + hash_length) <= str.len() {
+                    let hash: String = str[start_idx..start_idx + hash_length].to_string();
                     hashes.push(hash);
-                    start_idx += 20;
+                    start_idx += hash_length;
                 }
 
                 println!("{:?}", hashes);

@@ -11,6 +11,9 @@
 //!
 //! ```
 
+mod options;
+
+pub use options::Options;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt;
@@ -49,7 +52,7 @@ impl fmt::Debug for BEncode {
 impl BEncode {
     /// This function returns the parsed [`BEncode`] object, given a valid path to a file containing bencode.
     /// returns a `Bencode::Int(-1)` if the bencode cannot be parsed
-    pub fn parse(bytes: Vec<u8>) -> Self {
+    pub fn parse(bytes: Vec<u8>, options: Options) -> Self {
         // =====================STATE VARIABLES==========================
         let mut parents: Vec<BEncode> = Vec::new();
         let mut dict_keys: Vec<String> = Vec::new();
@@ -92,7 +95,7 @@ impl BEncode {
                 }
                 // String
                 c if c.chars().next().unwrap().is_numeric() => {
-                    let (new_idx, out_str) = Self::parse_str(&bytes, idx - 1);
+                    let (new_idx, out_str) = Self::parse_str(&bytes, idx - 1, options.parse_hex);
                     idx = new_idx;
                     // println!("Parsed String: {:?}", out_str);
                     if !parents.is_empty() {
@@ -220,7 +223,7 @@ impl BEncode {
     }
 
     /// Internal function to parse a bencode ByteString
-    fn parse_str(bytes: &[u8], mut idx: usize) -> (usize, BEncode) {
+    fn parse_str(bytes: &[u8], mut idx: usize, parse_hex: bool) -> (usize, BEncode) {
         let mut len_str: String = String::new();
 
         // This loop determines the length of the string
@@ -244,10 +247,9 @@ impl BEncode {
         let out_str = String::from_utf8(byte_slice.clone()).unwrap_or_else(|_e| "".to_string());
 
         if out_str.is_empty() {
-            // unsafe {
-            //     // let bin = String::from_utf8_unchecked(byte_slice);
-            //     return (idx + len, BEncode::BinaryStr(byte_slice.to_vec()));
-            // }
+            if parse_hex {
+                return (idx + len, BEncode::String(hex::encode(byte_slice)));
+            }
             return (idx + len, BEncode::BinaryStr(byte_slice.to_vec()));
         }
 
