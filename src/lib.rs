@@ -15,7 +15,7 @@ mod options;
 
 pub use options::Options;
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt;
 
 /// The BEncode Object.
@@ -28,8 +28,8 @@ pub enum BEncode {
     String(String),
     /// The `List` variant holds parsed bencode Lists. They can hold any of the bencode types as children
     List(Vec<BEncode>),
-    /// The `Dictionary` variant holds parsed bencode Dictionaries. They are similar to `Hashmap`, but the keys can only be [`BEncode::String`]. Though the value can be of any of the bencode types
-    Dictionary(HashMap<String, BEncode>),
+    /// The `Dictionary` variant holds parsed bencode Dictionaries. They are similar to `BTreeMap`, but the keys can only be [`BEncode::String`]. Though the value can be of any of the bencode types
+    Dictionary(BTreeMap<String, BEncode>),
     /// The `BinaryStr` variant holds parsed bencode ByteStrings that do not have valid UTF-8 characters. They are useful for dealing with the `pieces` property of a torrent file as they contain binary strings.
     BinaryStr(Vec<u8>),
 }
@@ -125,7 +125,7 @@ impl BEncode {
                 }
                 // Dictionary
                 "d" => {
-                    parents.push(BEncode::Dictionary(HashMap::new()));
+                    parents.push(BEncode::Dictionary(BTreeMap::new()));
                 }
                 "e" => {
                     match parents.len().cmp(&1) {
@@ -165,6 +165,75 @@ impl BEncode {
         }
 
         BEncode::Int(-1)
+    }
+
+    pub fn encode(object: &Self) -> String {
+        let mut output: String = String::new();
+
+        match object {
+            Self::Int(_) => {
+                output.push_str(&Self::encode_shallow_data(object));
+            }
+            Self::String(_) => {
+                output.push_str(&Self::encode_shallow_data(object));
+            }
+            Self::BinaryStr(_) => {
+                output.push_str(&Self::encode_shallow_data(object));
+            }
+            Self::List(_) => {
+                output.push_str(&Self::encode_list(object));
+            }
+            Self::Dictionary(_) => {
+                output.push_str(&Self::encode_dict(object));
+            }
+        }
+
+        output
+    }
+
+    fn encode_shallow_data(data: &Self) -> String {
+        match data {
+            Self::Int(num) => format!("i{}e", num),
+            Self::String(string) => format!("{}:{}", string.len(), string),
+            Self::BinaryStr(bin) => {
+                unsafe {
+                    let bytes = bin.clone();
+                    let out: String = String::from_utf8_unchecked(bytes);
+                    format!("{}:{}", out.len(), out)
+                }
+                // format!("{}:{:?}", bin.len(), bin)
+            }
+            _ => String::from(""),
+        }
+    }
+
+    fn encode_list(object: &Self) -> String {
+        let mut output: String = String::new();
+
+        if let Self::List(list) = object {
+            output.push('l');
+            for item in list {
+                output.push_str(Self::encode(item).as_str());
+            }
+            output.push('e');
+        }
+
+        output
+    }
+
+    fn encode_dict(object: &Self) -> String {
+        let mut output: String = String::new();
+
+        if let Self::Dictionary(dict) = object {
+            output.push('d');
+            for (key, item) in dict {
+                output.push_str(format!("{}:{}", key.len(), key).as_str());
+                output.push_str(Self::encode(item).as_str());
+            }
+            output.push('e');
+        }
+
+        output
     }
 
     /// This function is used to push items inside bencode Lists[`BEncode::List`] and Dictionaries[`BEncode::Dictionary`]
