@@ -21,7 +21,7 @@ fn main() {
 
     let path: PathBuf = PathBuf::from(args.input.clone());
     if !path.exists() {
-        println!("THe input file path does not exits!");
+        println!("The input file path does not exits!");
         return;
     }
 
