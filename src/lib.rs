@@ -42,7 +42,6 @@ impl fmt::Debug for BEncode {
             Self::List(value) => format!("{:?}", value),
             Self::Dictionary(value) => format!("{:?}", value),
             Self::BinaryStr(_) => "[Binary String]".to_string(),
-            // _ => String::from(""),
         };
 
         write!(f, "{}", output)
@@ -69,7 +68,6 @@ impl BEncode {
                 "i" => {
                     let (new_idx, num) = Self::parse_int(&bytes, idx - 1);
                     idx = new_idx;
-                    // println!("Parsed Integer: {:?}", num);
                     if !parents.is_empty() {
                         let mut parent: BEncode = parents.pop().unwrap();
 
@@ -85,7 +83,6 @@ impl BEncode {
                                     );
                                 } else {
                                     parent.push(num, Some(dict_keys.pop().unwrap()));
-                                    // dict_key = String::new();
                                 }
                                 parents.push(parent);
                             }
@@ -97,7 +94,6 @@ impl BEncode {
                 c if c.chars().next().unwrap().is_numeric() => {
                     let (new_idx, out_str) = Self::parse_str(&bytes, idx - 1, options.parse_hex);
                     idx = new_idx;
-                    // println!("Parsed String: {:?}", out_str);
                     if !parents.is_empty() {
                         let mut parent: BEncode = parents.pop().unwrap();
 
@@ -111,7 +107,6 @@ impl BEncode {
                                     dict_keys.push(format!("{:?}", out_str));
                                 } else {
                                     parent.push(out_str, Some(dict_keys.pop().unwrap()));
-                                    // dict_key = String::new();
                                 }
                                 parents.push(parent);
                             }
@@ -127,39 +122,34 @@ impl BEncode {
                 "d" => {
                     parents.push(BEncode::Dictionary(BTreeMap::new()));
                 }
-                "e" => {
-                    match parents.len().cmp(&1) {
-                        Ordering::Greater => {
-                            let parent: BEncode = parents.pop().unwrap();
-                            // println!("Parsed BEncode Object: {:?}", parent);
+                "e" => match parents.len().cmp(&1) {
+                    Ordering::Greater => {
+                        let parent: BEncode = parents.pop().unwrap();
 
-                            let mut root: BEncode = parents.pop().unwrap();
+                        let mut root: BEncode = parents.pop().unwrap();
 
-                            match root {
-                                BEncode::List(_) => {
-                                    root.push(parent, None);
-                                    parents.push(root);
-                                }
-                                BEncode::Dictionary(_) => {
-                                    if dict_keys.is_empty() {
-                                        println!("[BEncode Error] Cannot use Non-String BEncode Object as Dictionary Key!");
-                                    } else {
-                                        root.push(parent, Some(dict_keys.pop().unwrap()));
-                                        // dict_key = String::new();
-                                    }
-                                    parents.push(root);
-                                }
-                                _ => (),
+                        match root {
+                            BEncode::List(_) => {
+                                root.push(parent, None);
+                                parents.push(root);
                             }
+                            BEncode::Dictionary(_) => {
+                                if dict_keys.is_empty() {
+                                    println!("[BEncode Error] Cannot use Non-String BEncode Object as Dictionary Key!");
+                                } else {
+                                    root.push(parent, Some(dict_keys.pop().unwrap()));
+                                }
+                                parents.push(root);
+                            }
+                            _ => (),
                         }
-                        Ordering::Equal => {
-                            let root: BEncode = parents.pop().unwrap();
-                            return root;
-                            // println!("Root Object: {:?}", root);
-                        }
-                        _ => (),
                     }
-                }
+                    Ordering::Equal => {
+                        let root: BEncode = parents.pop().unwrap();
+                        return root;
+                    }
+                    _ => (),
+                },
                 _ => println!("Nothing"),
             }
         }
@@ -167,6 +157,7 @@ impl BEncode {
         BEncode::Int(-1)
     }
 
+    /// Encodes the given [`BEncode`] object recursively to bencode and returns the encoded [`String`]
     pub fn encode(object: &Self) -> String {
         let mut output: String = String::new();
 
@@ -191,22 +182,21 @@ impl BEncode {
         output
     }
 
+    /// Internal function to encode non-collection data types - [`BEncode::Int`], [`BEncode::String`] and [`BEncode::BinaryStr`]
     fn encode_shallow_data(data: &Self) -> String {
         match data {
             Self::Int(num) => format!("i{}e", num),
             Self::String(string) => format!("{}:{}", string.len(), string),
-            Self::BinaryStr(bin) => {
-                unsafe {
-                    let bytes = bin.clone();
-                    let out: String = String::from_utf8_unchecked(bytes);
-                    format!("{}:{}", out.len(), out)
-                }
-                // format!("{}:{:?}", bin.len(), bin)
-            }
+            Self::BinaryStr(bin) => unsafe {
+                let bytes = bin.clone();
+                let out: String = String::from_utf8_unchecked(bytes);
+                format!("{}:{}", out.len(), out)
+            },
             _ => String::from(""),
         }
     }
 
+    /// Internal function to encode [`BEncode::List`] objects
     fn encode_list(object: &Self) -> String {
         let mut output: String = String::new();
 
@@ -221,6 +211,7 @@ impl BEncode {
         output
     }
 
+    /// Internal function to encode [`BEncode::Dictionary`] objects
     fn encode_dict(object: &Self) -> String {
         let mut output: String = String::new();
 
