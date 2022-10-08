@@ -17,3 +17,4 @@ hex = "0.4.3"
 
 [dev-dependencies]
 clap = { version = "4.0.7", features = ["derive"] }
+sha-1 = "0.10.0"
